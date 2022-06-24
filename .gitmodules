@@ -1,6 +1,0 @@
-[submodule "gatekeeper-library"]
-	path = gatekeeper-library
-	url = https://github.com/open-policy-agent/gatekeeper-library.git
-[submodule "gatekeeper-library/library"]
-	path = gatekeeper-library/library
-	url = https://github.com/open-policy-agent/gatekeeper-library.git
