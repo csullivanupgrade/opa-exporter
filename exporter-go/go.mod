@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/prometheus/client_golang v1.12.2
-	k8s.io/apimachinery v0.24.0
+	k8s.io/apimachinery v0.24.2
 	k8s.io/client-go v0.24.0
 	sigs.k8s.io/controller-runtime v0.8.3
 )
