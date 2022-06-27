@@ -84,6 +84,7 @@ tasks:
     sources:
     - main.go
     - pkg
+    - .golangci.yaml
 
   tidy:
     desc: Tidy up go deps.

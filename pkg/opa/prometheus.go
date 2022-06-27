@@ -13,17 +13,28 @@ var (
 	Up = prometheus.NewDesc(
 		prometheus.BuildFQName(namespace, "", "up"),
 		"Was the last OPA scorecard query successful.",
-		nil, nil,
+		nil,
+		nil,
 	)
 	ConstraintViolation = prometheus.NewDesc(
 		prometheus.BuildFQName(namespace, "", "constraint_violations"),
 		"OPA violations for all constraints",
-		[]string{"kind", "name", "violating_kind", "violating_name", "violating_namespace", "violation_msg", "violation_enforcement"}, nil,
+		[]string{
+			"kind",
+			"name",
+			"violating_kind",
+			"violating_name",
+			"violating_namespace",
+			"violation_msg",
+			"violation_enforcement",
+		},
+		nil,
 	)
 	ConstraintInformation = prometheus.NewDesc(
 		prometheus.BuildFQName(namespace, "", "constraint_information"),
 		"Some general information of all constraints",
-		[]string{"kind", "name", "enforcementAction", "totalViolations"}, nil,
+		[]string{"kind", "name", "enforcementAction", "totalViolations"},
+		nil,
 	)
 )
 
@@ -38,7 +49,18 @@ func ExportViolations(constraints []Constraint) []prometheus.Metric {
 				continue
 			}
 			unique[key] = true
-			metric := prometheus.MustNewConstMetric(ConstraintViolation, prometheus.GaugeValue, 1, c.Meta.Kind, c.Meta.Name, v.Kind, v.Name, v.Namespace, v.Message, v.EnforcementAction)
+			metric := prometheus.MustNewConstMetric(
+				ConstraintViolation,
+				prometheus.GaugeValue,
+				1,
+				c.Meta.Kind,
+				c.Meta.Name,
+				v.Kind,
+				v.Name,
+				v.Namespace,
+				v.Message,
+				v.EnforcementAction,
+			)
 			m = append(m, metric)
 		}
 	}
@@ -48,7 +70,15 @@ func ExportViolations(constraints []Constraint) []prometheus.Metric {
 func ExportConstraintInformation(constraints []Constraint) []prometheus.Metric {
 	m := make([]prometheus.Metric, 0)
 	for _, c := range constraints {
-		metric := prometheus.MustNewConstMetric(ConstraintInformation, prometheus.GaugeValue, c.Status.TotalViolations, c.Meta.Kind, c.Meta.Name, c.Spec.EnforcementAction, fmt.Sprintf("%f", c.Status.TotalViolations))
+		metric := prometheus.MustNewConstMetric(
+			ConstraintInformation,
+			prometheus.GaugeValue,
+			c.Status.TotalViolations,
+			c.Meta.Kind,
+			c.Meta.Name,
+			c.Spec.EnforcementAction,
+			fmt.Sprintf("%f", c.Status.TotalViolations),
+		)
 		m = append(m, metric)
 	}
 	return m

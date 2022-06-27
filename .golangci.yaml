@@ -1,0 +1,84 @@
+issues:
+  include:
+  - EXC0011
+  exclude-rules:
+  - linters:
+    - funlen
+    source: "func Test"
+
+linters-settings:
+  funlen:
+    lines: 80
+    statements: 40
+  goconst:
+    min-len: 2
+    min-occurrences: 2
+  gocognit:
+    min-complexity: 10
+  gocyclo:
+    min-complexity: 10
+  gosec:
+    exclude-generated: false
+    severity: low
+    confidence: low
+  lll:
+    line-length: 120
+    tab-width: 2
+  nolintlint:
+    require-explanation: true
+    require-specific: true
+  staticcheck:
+    go: "1.17"
+    checks:
+    - all
+  stylecheck:
+    go: "1.17"
+    checks:
+    - "all"
+  tagliatelle:
+    case:
+      use-field-name: true
+      rules:
+        json: camel
+        yaml: camel
+        mapstructure: camel
+
+linters:
+  enable:
+  - bodyclose
+  - deadcode
+  - depguard
+  - dogsled
+  - dupl
+  - errcheck
+  - exportloopref
+  - exhaustive
+  - funlen
+  - goconst
+  - gocognit
+  - gocritic
+  - gofmt
+  - goimports
+  - gomnd
+  - gocyclo
+  - gosec
+  - gosimple
+  - govet
+  - ineffassign
+  - lll
+  - misspell
+  - nilnil
+  - nolintlint
+  - nakedret
+  - prealloc
+  - predeclared
+  - staticcheck
+  - structcheck
+  - stylecheck
+  - thelper
+  - tparallel
+  - typecheck
+  - unconvert
+  - unparam
+  - varcheck
+  - whitespace

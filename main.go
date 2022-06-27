@@ -19,8 +19,12 @@ var (
 	metricsPath = flag.String("web.telemetry-path", "/metrics",
 		"Path under which to expose metrics")
 
-	inCluster = flag.Bool("incluster", false,
-		"Does the exporter run within a K8S cluster, when true it will try to look for K8S service account details in the usual location.")
+	inCluster = flag.Bool(
+		"incluster",
+		false,
+		"Does the exporter run within a K8S cluster, when true it will try to look for K8S service account details in "+
+			"the usual location.",
+	)
 
 	ticker  *time.Ticker
 	done    = make(chan bool)
@@ -41,7 +45,6 @@ func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 }
 
 func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
-
 	ch <- prometheus.MustNewConstMetric(
 		opa.Up, prometheus.GaugeValue, 1,
 	)
@@ -79,9 +82,11 @@ func (e *Exporter) startScheduled(t time.Duration) {
 
 func main() {
 	flag.Parse()
+	// TODO: Make configurable
+	const tickerDuration = 10 * time.Second
 
 	exporter := NewExporter()
-	exporter.startScheduled(10 * time.Second)
+	exporter.startScheduled(tickerDuration)
 	prometheus.Unregister(collectors.NewGoCollector())
 	prometheus.MustRegister(exporter)
 
