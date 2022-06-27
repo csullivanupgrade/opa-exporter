@@ -64,6 +64,8 @@ tasks:
     sources:
     - main.go
     - pkg
+    - go.mod
+    - go.sum
     generates:
     - "{{ .BIN_NAME }}"
 
@@ -74,6 +76,8 @@ tasks:
     sources:
     - main.go
     - pkg
+    - go.mod
+    - go.sum
 
   lint:
     desc: Run the linter.
@@ -114,6 +118,8 @@ tasks:
     - Dockerfile
     - main.go
     - pkg
+    - go.mod
+    - go.sum
 
   log:
     cmds:
