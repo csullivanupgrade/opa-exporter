@@ -9,6 +9,7 @@ import (
 	"github.com/csullivanupgrade/opa-scorecard/pkg/opa"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -62,7 +63,7 @@ func (e *Exporter) startScheduled(t time.Duration) {
 				if err != nil {
 					log.Printf("%+v\n", err)
 				}
-				log.Println("Found %v constraints", len(constraints))
+				log.Printf("Found %v constraints", len(constraints))
 				allMetrics := make([]prometheus.Metric, 0)
 				violationMetrics := opa.ExportViolations(constraints)
 				allMetrics = append(allMetrics, violationMetrics...)
@@ -81,18 +82,21 @@ func main() {
 
 	exporter := NewExporter()
 	exporter.startScheduled(10 * time.Second)
-	prometheus.Unregister(prometheus.NewGoCollector())
+	prometheus.Unregister(collectors.NewGoCollector())
 	prometheus.MustRegister(exporter)
 
 	http.Handle(*metricsPath, promhttp.Handler())
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(`<html>
+		_, err := w.Write([]byte(`<html>
              <head><title>OPA ScoreCard Exporter</title></head>
              <body>
              <h1>OPA ScoreCard Exporter</h1>
              <p><a href='` + *metricsPath + `'>Metrics</a></p>
              </body>
              </html>`))
+		if err != nil {
+			log.Printf("err handling response: %v", err)
+		}
 	})
 	log.Fatal(http.ListenAndServe(*listenAddress, nil))
 }
