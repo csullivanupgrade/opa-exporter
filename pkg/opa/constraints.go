@@ -1,3 +1,4 @@
+// Package opa provides prometheus metrics for OPA and methods
 package opa
 
 import (
@@ -12,7 +13,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -37,7 +37,6 @@ type ConstraintStatus struct {
 	Violations      []*Violation
 }
 
-// Constraint
 type Constraint struct {
 	Meta   ConstraintMeta
 	Spec   ConstraintSpec
@@ -53,7 +52,7 @@ const (
 	constraintsGV = "constraints.gatekeeper.sh/v1beta1"
 )
 
-func createConfig(inCluster *bool) (*restclient.Config, error) {
+func createConfig(inCluster *bool) (*rest.Config, error) {
 	if *inCluster {
 		log.Println("Using incluster K8S client")
 		return rest.InClusterConfig()
@@ -77,7 +76,6 @@ func createConfig(inCluster *bool) (*restclient.Config, error) {
 }
 
 func createKubeClient(inCluster *bool) (*kubernetes.Clientset, error) {
-
 	config, err := createConfig(inCluster)
 	if err != nil {
 		log.Println(err)
@@ -109,7 +107,7 @@ func createKubeClientGroupVersion(inCluster *bool) (controllerClient.Client, err
 	return client, nil
 }
 
-func print(o interface{}) {
+func marshalAndLog(o interface{}) {
 	b, err := json.MarshalIndent(o, "", "\t")
 	if err != nil {
 		log.Printf("Error marshalling: %+v\n", err)
@@ -118,25 +116,53 @@ func print(o interface{}) {
 	}
 }
 
+func checkAndAddConstraint(item unstructured.Unstructured) (*Constraint, error) {
+	kind := item.GetKind()
+	name := item.GetName()
+	namespace := item.GetNamespace()
+	log.Printf("Kind:%s, Name:%s, Namespace:%s \n", kind, name, namespace)
+	var obj = item.Object
+	var constraint Constraint
+	data, err := json.Marshal(obj)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	err = json.Unmarshal(data, &constraint)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	return &Constraint{
+		Meta: ConstraintMeta{Kind: kind, Name: name},
+		Status: ConstraintStatus{
+			TotalViolations: constraint.Status.TotalViolations,
+			Violations:      constraint.Status.Violations,
+		},
+		Spec: ConstraintSpec{EnforcementAction: constraint.Spec.EnforcementAction},
+	}, nil
+}
+
 // GetConstraints returns a list of all OPA constraints
+// nolint:gocognit,gocyclo // would be nice to reduce complexity - I don't see a straightforward path ATM.
 func GetConstraints(inCluster *bool) ([]Constraint, error) {
 	client, err := createKubeClient(inCluster)
 	if err != nil {
 		return nil, err
 	}
-	print(client)
+	marshalAndLog(client)
 
 	cClient, err := createKubeClientGroupVersion(inCluster)
 	if err != nil {
 		return nil, err
 	}
-	print(cClient)
+	marshalAndLog(cClient)
+
 	_, c, err := client.ServerGroupsAndResources()
-	// c, err := client.ServerResourcesForGroupVersion(constraintsGV)
 	if err != nil {
 		return nil, err
 	}
-	// print(c)
 
 	var constraints []Constraint
 	for _, apiresources := range c {
@@ -145,26 +171,22 @@ func GetConstraints(inCluster *bool) ([]Constraint, error) {
 			continue
 		}
 		for _, r := range apiresources.APIResources {
-			canList := false
-
 			if strings.HasSuffix(r.Name, "/status") {
 				continue
 			}
 
 			for _, verb := range r.Verbs {
 				if verb == "list" {
-					canList = true
 					break
+				} else {
+					log.Printf("Can't list objets of type %+v\n", r.Name)
+					for _, verb := range r.Verbs {
+						log.Println("Allowed: ", verb)
+					}
+					continue
 				}
 			}
 
-			if !canList {
-				log.Printf("Can't list objets of type %+v\n", r.Name)
-				for _, verb := range r.Verbs {
-					log.Println("Allowed: ", verb)
-				}
-				continue
-			}
 			actual := &unstructured.UnstructuredList{}
 			actual.SetGroupVersionKind(schema.GroupVersionKind{
 				Group:   r.Group,
@@ -180,33 +202,15 @@ func GetConstraints(inCluster *bool) ([]Constraint, error) {
 
 			if len(actual.Items) > 0 {
 				for _, item := range actual.Items {
-					kind := item.GetKind()
-					name := item.GetName()
-					namespace := item.GetNamespace()
-					log.Printf("Kind:%s, Name:%s, Namespace:%s \n", kind, name, namespace)
-					var obj = item.Object
-					var constraint Constraint
-					data, err := json.Marshal(obj)
+					constraint, err := checkAndAddConstraint(item)
 					if err != nil {
-						log.Println(err)
 						continue
 					}
-					err = json.Unmarshal(data, &constraint)
-					if err != nil {
-						log.Println(err)
-						continue
-					}
-
-					constraints = append(constraints, Constraint{
-						Meta:   ConstraintMeta{Kind: item.GetKind(), Name: item.GetName()},
-						Status: ConstraintStatus{TotalViolations: constraint.Status.TotalViolations, Violations: constraint.Status.Violations},
-						Spec:   ConstraintSpec{EnforcementAction: constraint.Spec.EnforcementAction},
-					})
+					constraints = append(constraints, *constraint)
 				}
 			} else {
 				log.Println("Nothing returned for Kind ", r.Kind)
 			}
-
 		}
 	}
 	return constraints, nil
