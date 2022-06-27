@@ -5,7 +5,7 @@ prometheus:
   ## ref: https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#prometheusspec
   ##
   prometheusSpec:
-    additionalScrapeConfigs: 
+    additionalScrapeConfigs:
     - job_name: opa-exporter
       kubernetes_sd_configs:
         - role: service
