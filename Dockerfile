@@ -17,12 +17,11 @@ RUN echo "Building" && \
 #   task test && \
 #   echo
 
-## TODO ## FIX LINT/ENABLE LINTER ##
-# FROM compile AS linter
+FROM compile AS linter
 
-# RUN echo "Linting" && \
-#   task lint --timeout 60s && \
-#   echo
+RUN echo "Linting" && \
+  task lint && \
+  echo
 
 FROM gcr.io/distroless/static:nonroot
 

@@ -50,9 +50,7 @@ type ConstraintSpec struct {
 }
 
 const (
-	constraintsGV           = "constraints.gatekeeper.sh/v1beta1"
-	constraintsGroup        = "constraints.gatekeeper.sh"
-	constraintsGroupVersion = "v1beta1"
+	constraintsGV = "constraints.gatekeeper.sh/v1beta1"
 )
 
 func createConfig(inCluster *bool) (*restclient.Config, error) {
@@ -114,19 +112,11 @@ func createKubeClientGroupVersion(inCluster *bool) (controllerClient.Client, err
 func print(o interface{}) {
 	b, err := json.MarshalIndent(o, "", "\t")
 	if err != nil {
-		log.Println("Error marshalling: %+v\n", err)
+		log.Printf("Error marshalling: %+v\n", err)
 	} else {
 		log.Println(string(b))
 	}
 }
-
-var (
-	runtimeClassGVR = schema.GroupVersionResource{
-		Group:    "constraints.gatekeeper.sh.",
-		Version:  "v1beta",
-		Resource: "k8sallowedrepos",
-	}
-)
 
 // GetConstraints returns a list of all OPA constraints
 func GetConstraints(inCluster *bool) ([]Constraint, error) {
