@@ -1,4 +1,4 @@
-name: Publish latest Docker image
+name: Build
 
 on:
   pull_request:
@@ -13,8 +13,8 @@ env:
   NAMESPACE: csullivanupgrade
 
 jobs:
-  push:
-    name: Push Docker
+  build:
+    name: Docker
     runs-on: ubuntu-latest
     permissions:
       packages: write
