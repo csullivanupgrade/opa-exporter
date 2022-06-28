@@ -1,0 +1,42 @@
+version: '3'
+
+includes:
+  common:
+    taskfile: common.yaml
+
+vars:
+  CURL_LOG: "{{ .TMP_DIR }}/curl.log"
+  SELECTOR: job=curl-log
+
+tasks:
+  deps:
+  - task: common:namespace
+  log:
+    cmds:
+    - kubectl --context {{ .CONTEXT }} delete --ignore-not-found job --selector {{ .SELECTOR }}
+    - |
+      kubectl --context {{ .CONTEXT }} apply --filename test/manifests/curl.yaml
+    - kubectl --context {{ .CONTEXT }} wait --timeout 120s --for=condition=complete job --selector {{ .SELECTOR }}
+    - kubectl --context {{ .CONTEXT }} logs --selector {{ .SELECTOR }} --tail -1 > {{ .CURL_LOG }}
+    - kubectl --context {{ .CONTEXT }} delete --ignore-not-found job --selector {{ .SELECTOR }}
+
+  policy:
+    cmds:
+    - kubectl --context {{ .CONTEXT }} apply --filename test/manifests/test/template.yaml
+    - kubectl --context {{ .CONTEXT }} apply --filename test/manifests/test/constraint.yaml
+    - kubectl --context {{ .CONTEXT }} apply --filename test/manifests/test/violation.yaml
+
+  clean:
+    cmds:
+    - kubectl --context {{ .CONTEXT }} delete --ignore-not-found --filename test/manifests/test
+    - kubectl --context {{ .CONTEXT }} delete --ignore-not-found job --selector {{ .SELECTOR }}
+
+  check-for-warning:
+    cmds:
+    - task: policy
+    - sleep 15
+    - task: log
+    - cat {{ .CURL_LOG }}
+    - grep '{{ .VIOLATION_MSG }}' {{ .CURL_LOG }}
+    vars:
+      VIOLATION_MSG: name="ns-must-have-test",violating_kind="Namespace",violating_name="throwawarning"

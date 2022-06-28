@@ -1,0 +1,18 @@
+version: '3'
+
+includes:
+  common:
+    taskfile: common.yaml
+
+tasks:
+  create:
+    cmds:
+    - kind create cluster --name {{ .CLUSTER_NAME }}
+
+  delete:
+    cmds:
+    - kind delete cluster --name {{ .CLUSTER_NAME }}
+
+  load:
+    cmds:
+    - kind load docker-image --name {{ .CLUSTER_NAME }} {{ .IMAGE_NAME }}:{{ .IMAGE_TAG }}

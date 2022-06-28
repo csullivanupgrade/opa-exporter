@@ -1,0 +1,106 @@
+version: '3'
+
+includes:
+  common:
+    taskfile: common.yaml
+
+tasks:
+  config-deploy:
+    desc: Add the grafana dashboard config.
+    deps:
+    - task: common:namespace
+      vars:
+        NAMESPACE: "{{ .NAMESPACE_PROMETHEUS }}"
+    cmds:
+    - kubectl create configmap opa-dashboard --from-file=test/grafana-opa-dashboard.json
+    - kubectl label configmap opa-dashboard grafana_dashboard="1"
+    generates:
+    - tmp/config-installed
+
+  config-delete:
+    desc: Add the grafana dashboard config.
+    deps:
+    - task: common:namespace
+      vars:
+        NAMESPACE: "{{ .NAMESPACE_PROMETHEUS }}"
+    cmds:
+    - kubectl --context {{ .CONTEXT }} delete --ignore-not-found configmap opa-dashboard
+
+  deploy:
+    desc: Deploy prometheus to your local cluster. Automatically pull in necessary helm repo.
+    cmds:
+    - task: config-deploy
+    - task: common:namespace
+      vars:
+        NAMESPACE: "{{ .NAMESPACE_PROMETHEUS }}"
+    - task: common:helm-repo
+      vars:
+        NAME: prometheus-community
+        URL: https://prometheus-community.github.io/helm-charts
+    - |
+      helm upgrade prometheus prometheus-community/kube-prometheus-stack \
+        --atomic \
+        --install \
+        --values test/prom-values.yaml
+
+  delete:
+    desc: Remove prometheus from your local cluster.
+    deps:
+    - task: common:namespace
+      vars:
+        NAMESPACE: "{{ .NAMESPACE_PROMETHEUS }}"
+    cmds:
+    - |
+      helm uninstall \
+        prometheus \
+        --namespace {{ .NAMESPACE_PROMETHEUS }} \
+        --wait
+    - kubectl delete --ignore-not-found crd alertmanagerconfigs.monitoring.coreos.com
+    - kubectl delete --ignore-not-found crd alertmanagers.monitoring.coreos.com
+    - kubectl delete --ignore-not-found crd podmonitors.monitoring.coreos.com
+    - kubectl delete --ignore-not-found crd probes.monitoring.coreos.com
+    - kubectl delete --ignore-not-found crd prometheuses.monitoring.coreos.com
+    - kubectl delete --ignore-not-found crd prometheusrules.monitoring.coreos.com
+    - kubectl delete --ignore-not-found crd servicemonitors.monitoring.coreos.com
+    - kubectl delete --ignore-not-found crd thanosrulers.monitoring.coreos.com
+    - kubectl delete --ignore-not-found clusterrolebindings prometheus-grafana-clusterrolebinding
+    - kubectl delete --ignore-not-found clusterrolebindings prometheus-kube-prometheus-admission
+    - kubectl delete --ignore-not-found clusterrolebindings prometheus-kube-prometheus-operator
+    - kubectl delete --ignore-not-found clusterrolebindings prometheus-kube-prometheus-prometheus
+    - kubectl delete --ignore-not-found clusterrolebindings prometheus-kube-state-metrics
+    - kubectl delete --ignore-not-found clusterrole prometheus-grafana-clusterrole
+    - kubectl delete --ignore-not-found clusterrole prometheus-kube-prometheus-admission
+    - kubectl delete --ignore-not-found clusterrole prometheus-kube-prometheus-operator
+    - kubectl delete --ignore-not-found clusterrole prometheus-kube-prometheus-prometheus
+    - kubectl delete --ignore-not-found clusterrole prometheus-kube-state-metrics
+    - kubectl delete --ignore-not-found --namespace kube-system service prometheus-kube-prometheus-coredns
+    - kubectl delete --ignore-not-found --namespace kube-system service prometheus-kube-prometheus-kube-controller-manager
+    - kubectl delete --ignore-not-found --namespace kube-system service prometheus-kube-prometheus-kube-etcd
+    - kubectl delete --ignore-not-found --namespace kube-system service prometheus-kube-prometheus-kube-proxy
+    - kubectl delete --ignore-not-found --namespace kube-system service prometheus-kube-prometheus-kube-scheduler
+    - kubectl delete --ignore-not-found mutatingwebhookconfigurations prometheus-kube-prometheus-admission
+    - kubectl delete --ignore-not-found validatingwebhookconfigurations prometheus-kube-prometheus-admission
+    - task: prom-config-delete
+
+  port-forward:
+    desc: Forward grafana's port so that it can be accessed at http://localhost:3000
+    silent: true
+    deps:
+    - task: common:namespace
+      vars:
+        NAMESPACE: "{{ .NAMESPACE_PROMETHEUS }}"
+    cmds:
+    - |
+      echo ----------
+      echo -n 'User: '
+      kubectl get secrets prometheus-grafana --output jsonpath='{.data.admin-user}' | base64 -d
+      echo ''
+    - |
+      echo -n 'Password: '
+      kubectl get secrets prometheus-grafana --output jsonpath='{.data.admin-password}' | base64 -d
+      echo ''
+      echo ----------
+    - kubectl port-forward {{ .GRAFANA_POD }} 3000:3000
+    vars:
+      GRAFANA_POD:
+        sh: kubectl get pod --selector app.kubernetes.io/name=grafana --output name | cut -d/ -f2

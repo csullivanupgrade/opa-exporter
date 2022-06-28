@@ -1,0 +1,48 @@
+version: '3'
+
+includes:
+  common:
+    taskfile: common.yaml
+
+tasks:
+  template:
+    desc: Do not invoke directly. Provide the base template and invoke it with a variable kubectl command.
+    deps:
+    - task: common:helm-repo
+      vars:
+        NAME: gatekeeper
+        URL: https://open-policy-agent.github.io/gatekeeper/charts
+    - task: common:namespace
+    cmds:
+    - mkdir -p {{ .TMP_DIR }}
+    - |
+      helm template gatekeeper/gatekeeper  \
+        --name-template=gatekeeper \
+        --set auditInterval=10 \
+        --set enableExternalData={{ .ED_ENABLED }} \
+        --set controllerManager.dnsPolicy=ClusterFirst,audit.dnsPolicy=ClusterFirst \
+        --set logDenies=true \
+        --set disableMutation=true \
+        --set psp.enabled=false \
+        --set rbac.Create=true \
+        --set replicas=1 \
+      > {{ .TMP_DIR }}/gatekeeper.yaml
+    - kubectl --context {{ .CONTEXT }} {{ .ACTION }} --wait --filename {{ .TMP_DIR }}/gatekeeper.yaml
+    generates:
+    - "{{ .TMP_DIR }}/gatekeeper.yaml"
+
+  deploy:
+    desc: Deploy gatekeeper to your local cluster. Automatically pull in necessary helm repo.
+    cmds:
+    - task: template
+      vars:
+        ACTION: apply
+    - kubectl --context {{ .CONTEXT }} wait --timeout 120s --for=condition=complete job --selector app=gatekeeper
+    - kubectl --context {{ .CONTEXT }} wait --timeout 120s --for=condition=ready pod --selector gatekeeper.sh/system=yes
+
+  delete:
+    desc: Remove gatekeeper from your local cluster.
+    cmds:
+    - task: template
+      vars:
+        ACTION: delete --ignore-not-found

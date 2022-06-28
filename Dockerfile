@@ -7,7 +7,7 @@ COPY . .
 RUN go install github.com/go-task/task/v3/cmd/task@latest
 
 RUN echo "Building" && \
-  task build && \
+  task build-bin && \
   echo
 
 ## TODO ## ADD TESTS ##
