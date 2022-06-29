@@ -1,4 +1,4 @@
-module github.com/csullivanupgrade/opa-scorecard
+module github.com/csullivanupgrade/opa-exporter
 
 go 1.18
 

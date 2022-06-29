@@ -25,6 +25,6 @@ RUN echo "Linting" && \
 
 FROM gcr.io/distroless/static:nonroot
 
-COPY --from=build /build/tmp/opa-scorecard /opa-scorecard
+COPY --from=build /build/tmp/opa-exporter /opa-exporter
 
-CMD [ "/opa-scorecard", "--incluster=true" ]
+CMD [ "/opa-exporter", "--incluster=true" ]

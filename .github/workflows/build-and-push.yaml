@@ -61,7 +61,7 @@ jobs:
     - name: Build Docker images
       uses: docker/build-push-action@v3
       with:
-        tags: opa-scorecard:local
+        tags: ghcr.io/${{ env.NAMESPACE }}/${{ env.IMAGE_NAME }}:local
 
     - name: Check for warning in /metrics
       run: |

@@ -8,11 +8,11 @@ import (
 )
 
 var (
-	namespace = "opa_scorecard"
+	namespace = "opa_exporter"
 
 	Up = prometheus.NewDesc(
 		prometheus.BuildFQName(namespace, "", "up"),
-		"Was the last OPA scorecard query successful.",
+		"Was the last OPA exporter query successful.",
 		nil,
 		nil,
 	)
