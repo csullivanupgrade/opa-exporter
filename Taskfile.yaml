@@ -1,13 +1,13 @@
 version: '3'
 
 vars:
-  BIN_NAME: tmp/opa-scorecard
+  BIN_NAME: tmp/opa-exporter
   CLUSTER_NAME: opa-exporter
   CONTEXT: kind-{{ .CLUSTER_NAME }}
   CWD:
     sh: pwd
   ED_ENABLED: "false"
-  IMAGE_NAME: opa-scorecard
+  IMAGE_NAME: ghcr.io/csullivanupgrade/opa-exporter
   IMAGE_TAG: local
   NAMESPACE: gatekeeper
   NAMESPACE_PROMETHEUS: prometheus
@@ -107,27 +107,40 @@ tasks:
     - go.mod
     - go.sum
 
-  manifests:
-    desc: Copy manifests for deployment to a local cluster.
+  template:
+    desc: Provide the opa-exporter template and invoke it with a variable kubectl command.
+    deps:
+    - task: common:namespace
     cmds:
-    - mkdir -p {{ .TMP_DIR }}/manifests/exporter
-    - cp test/manifests/exporter/* {{ .TMP_DIR }}/manifests/exporter/
+    - mkdir -p {{ .TMP_DIR }}
+    - |
+      helm template opa-exporter  \
+        --values charts/opa-exporter/values.yaml \
+        --set image.tag=local \
+        charts/opa-exporter \
+      > {{ .TMP_DIR }}/opa-exporter.yaml
+    - kubectl --context {{ .CONTEXT }} {{ .ACTION }} --wait --filename {{ .TMP_DIR }}/opa-exporter.yaml
     sources:
-    - test/manifests/exporter/*
+    - charts/opa-exporter
     generates:
-    - "{{ .TMP_DIR }}/manifests/exporter/*"
+    - "{{ .TMP_DIR }}/opa-exporter.yaml"
 
   deploy:
-    desc: Deploy the exporter into the cluster specified by {{ .CONTEXT }}.
-    deps:
-    - task: manifests
-    - task: common:namespace
-    - task: kind:load
+    desc: Deploy opa-exporter to your local cluster.
     cmds:
+    - task: kind:load
+    - task: template
+      vars:
+        ACTION: apply
     - |
-      REPLACEMENT_MANIFEST=$(sed 's/namespace: .*/namespace: {{ .NAMESPACE }}/' {{ .BINDING_MANIFEST }})
-      echo "$REPLACEMENT_MANIFEST" > {{ .BINDING_MANIFEST }}
-    - kubectl --context {{ .CONTEXT }} apply --filename {{ .TMP_DIR }}/manifests/exporter
-    vars:
-      BINDING_MANIFEST: "{{ .TMP_DIR }}/manifests/exporter/clusterrolebinding.yaml"
-      DEPLOYMENT_MANIFEST: "{{ .TMP_DIR }}/manifests/exporter/deployment.yaml"
+      kubectl --context {{ .CONTEXT }} wait pod \
+        --timeout 120s \
+        --for=condition=ready \
+        --selector app.kubernetes.io/name=opa-exporter
+
+  delete:
+    desc: Remove opa-exporter from your local cluster.
+    cmds:
+    - task: template
+      vars:
+        ACTION: delete --ignore-not-found

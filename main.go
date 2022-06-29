@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/csullivanupgrade/opa-scorecard/pkg/opa"
+	"github.com/csullivanupgrade/opa-exporter/pkg/opa"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
@@ -93,9 +93,9 @@ func main() {
 	http.Handle(*metricsPath, promhttp.Handler())
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		_, err := w.Write([]byte(`<html>
-             <head><title>OPA ScoreCard Exporter</title></head>
+             <head><title>OPA Exporter</title></head>
              <body>
-             <h1>OPA ScoreCard Exporter</h1>
+             <h1>OPA Exporter</h1>
              <p><a href='` + *metricsPath + `'>Metrics</a></p>
              </body>
              </html>`))
