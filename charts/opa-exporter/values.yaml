@@ -4,7 +4,7 @@ replicaCount: 1
 # Image configuration for the Agent container
 image:
   # -- Image repository and name
-  repository: mcelep/opa_scorecard_exporter
+  repository: ghcr.io/csullivanupgrade/opa-exporter
   # -- Overrides the image tag whose default is the chart `appVersion`
   tag: ""
   # -- List of image pull secrets
@@ -12,9 +12,9 @@ image:
 
 # Creation of the Service Account used by the Pod
 serviceAccount:
-  # -- Whether to create the Service Account used by the Pod
-  create: true
-  # -- If not set and `create` is `true`, a name is generated using the fullname template
+  # -- Whether to enable the Service Account used by the Pod
+  enabled: true
+  # -- If not set and `enabled` is `true`, a name is generated using the fullname template
   name: ""
   # -- Annotations to add to the service account
   annotations: {}
@@ -39,11 +39,11 @@ service:
   # -- Service type
   type: ClusterIP
   # -- Service port
-  port: 80
+  port: 9141
 
 serviceMonitor:
   # -- Wherter to install `ServiceMonitor` or not
-  enabled: true
+  enabled: false
   # -- Extra labels
   extraLabels: {}
 
@@ -60,8 +60,8 @@ tolerations: []
 affinity: {}
 
 rbac:
-  # -- Whether to create Cluster Role and Cluster Role Binding
-  create: true
+  # -- Whether to enable Cluster Role and Cluster Role Binding
+  enabled: true
   # -- (string) Use an existing ClusterRole/Role
   useExistingRole:
   # -- Extra ClusterRole rules

@@ -3,5 +3,5 @@ name: opa-exporter
 description: Prometheus exporter for OPA Gatekeeper.
 type: application
 version: 0.1.1
-appVersion: 0.0.4
-home: https://github.com/mcelep/opa-scorecard
+appVersion: 0.1.1
+home: https://github.com/csullivanupgrade/opa-exporter

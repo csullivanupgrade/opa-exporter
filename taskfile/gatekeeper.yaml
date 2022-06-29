@@ -6,7 +6,7 @@ includes:
 
 tasks:
   template:
-    desc: Do not invoke directly. Provide the base template and invoke it with a variable kubectl command.
+    desc: Provide the gatekeeper template and invoke it with a variable kubectl command.
     deps:
     - task: common:helm-repo
       vars:

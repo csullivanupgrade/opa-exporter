@@ -7,7 +7,7 @@ Prometheus exporter for OPA Gatekeeper.
 ## Get the Helm repository
 
 ```shell
-helm repo add opa-exporter https://mcelep.github.io/opa-scorecard
+helm repo add opa-exporter https://csullivanugprade.github.io/opa-exporter
 helm repo update
 ```
 
@@ -37,7 +37,7 @@ The command removes all the Kubernetes components associated with the chart and 
 |-----|------|---------|-------------|
 | affinity | object | `{}` | Pod affinity |
 | image.pullSecrets | list | `[]` | List of image pull secrets |
-| image.repository | string | `"mcelep/opa_scorecard_exporter"` | Image repository and name |
+| image.repository | string | `"ghcr.io/csullivanupgrade/opa-exporter"` | Image repository and name |
 | image.tag | string | `""` | Overrides the image tag whose default is the chart `appVersion` |
 | nodeSelector | object | `{}` | Pod node selector |
 | podAnnotations | object | `{}` | Pod annotations |
@@ -48,11 +48,11 @@ The command removes all the Kubernetes components associated with the chart and 
 | replicaCount | int | `1` | Count of Pod replicas |
 | resources | object | `{}` | Resources for the Agent container |
 | securityContext | object | `{}` | Security context for the Agent container |
-| service.port | int | `80` | Service port |
+| service.port | int | `9141` | Service port |
 | service.type | string | `"ClusterIP"` | Service type |
 | serviceAccount.annotations | object | `{}` | Annotations to add to the service account |
 | serviceAccount.create | bool | `true` | Whether to create the Service Account used by the Pod |
 | serviceAccount.name | string | `""` | If not set and `create` is `true`, a name is generated using the fullname template |
-| serviceMonitor.enabled | bool | `true` | Wherter to install `ServiceMonitor` or not |
+| serviceMonitor.enabled | bool | `false` | Wherter to install `ServiceMonitor` or not |
 | serviceMonitor.extraLabels | object | `{}` | Extra labels |
 | tolerations | list | `[]` | Pod tolerations |

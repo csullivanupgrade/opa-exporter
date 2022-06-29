@@ -87,7 +87,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "opa_scorecard_constraint_violations{violating_namespace=\"$namespace\"}",
+          "expr": "opa_exporter_constraint_violations{violating_namespace=\"$namespace\"}",
           "format": "table",
           "instant": true,
           "interval": "",
@@ -166,7 +166,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "count(opa_scorecard_constraint_violations{violating_namespace=\"$namespace\"})",
+          "expr": "count(opa_exporter_constraint_violations{violating_namespace=\"$namespace\"})",
           "interval": "",
           "legendFormat": "Overall OPA violations per namespace",
           "refId": "A"
@@ -263,7 +263,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum by (kind) (opa_scorecard_constraint_violations{violating_namespace=\"$namespace\"})",
+          "expr": "sum by (kind) (opa_exporter_constraint_violations{violating_namespace=\"$namespace\"})",
           "format": "time_series",
           "interval": "",
           "legendFormat": "{{kind}}",
@@ -319,14 +319,14 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(opa_scorecard_constraint_information{enforcementAction=\"dryrun\"})",
+          "expr": "sum(opa_exporter_constraint_information{enforcementAction=\"dryrun\"})",
           "interval": "",
           "legendFormat": "enforcementAction=\"dryrun\"",
           "refId": "A"
         },
         {
           "exemplar": true,
-          "expr": "sum(opa_scorecard_constraint_information{enforcementAction=\"deny\"})",
+          "expr": "sum(opa_exporter_constraint_information{enforcementAction=\"deny\"})",
           "hide": false,
           "interval": "",
           "legendFormat": "enforcementAction=\"deny\"",
@@ -334,7 +334,7 @@
         },
         {
           "exemplar": true,
-          "expr": "sum(opa_scorecard_constraint_information{enforcementAction=\"warn\"})",
+          "expr": "sum(opa_exporter_constraint_information{enforcementAction=\"warn\"})",
           "hide": false,
           "interval": "",
           "legendFormat": "",
