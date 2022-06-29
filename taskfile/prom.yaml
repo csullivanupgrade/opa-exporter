@@ -55,31 +55,31 @@ tasks:
         prometheus \
         --namespace {{ .NAMESPACE_PROMETHEUS }} \
         --wait
-    - kubectl delete --ignore-not-found crd alertmanagerconfigs.monitoring.coreos.com
-    - kubectl delete --ignore-not-found crd alertmanagers.monitoring.coreos.com
-    - kubectl delete --ignore-not-found crd podmonitors.monitoring.coreos.com
-    - kubectl delete --ignore-not-found crd probes.monitoring.coreos.com
-    - kubectl delete --ignore-not-found crd prometheuses.monitoring.coreos.com
-    - kubectl delete --ignore-not-found crd prometheusrules.monitoring.coreos.com
-    - kubectl delete --ignore-not-found crd servicemonitors.monitoring.coreos.com
-    - kubectl delete --ignore-not-found crd thanosrulers.monitoring.coreos.com
-    - kubectl delete --ignore-not-found clusterrolebindings prometheus-grafana-clusterrolebinding
-    - kubectl delete --ignore-not-found clusterrolebindings prometheus-kube-prometheus-admission
-    - kubectl delete --ignore-not-found clusterrolebindings prometheus-kube-prometheus-operator
-    - kubectl delete --ignore-not-found clusterrolebindings prometheus-kube-prometheus-prometheus
-    - kubectl delete --ignore-not-found clusterrolebindings prometheus-kube-state-metrics
-    - kubectl delete --ignore-not-found clusterrole prometheus-grafana-clusterrole
-    - kubectl delete --ignore-not-found clusterrole prometheus-kube-prometheus-admission
-    - kubectl delete --ignore-not-found clusterrole prometheus-kube-prometheus-operator
-    - kubectl delete --ignore-not-found clusterrole prometheus-kube-prometheus-prometheus
-    - kubectl delete --ignore-not-found clusterrole prometheus-kube-state-metrics
-    - kubectl delete --ignore-not-found --namespace kube-system service prometheus-kube-prometheus-coredns
-    - kubectl delete --ignore-not-found --namespace kube-system service prometheus-kube-prometheus-kube-controller-manager
-    - kubectl delete --ignore-not-found --namespace kube-system service prometheus-kube-prometheus-kube-etcd
-    - kubectl delete --ignore-not-found --namespace kube-system service prometheus-kube-prometheus-kube-proxy
-    - kubectl delete --ignore-not-found --namespace kube-system service prometheus-kube-prometheus-kube-scheduler
-    - kubectl delete --ignore-not-found mutatingwebhookconfigurations prometheus-kube-prometheus-admission
-    - kubectl delete --ignore-not-found validatingwebhookconfigurations prometheus-kube-prometheus-admission
+    - kubectl --context {{ .CONTEXT }} delete --ignore-not-found crd alertmanagerconfigs.monitoring.coreos.com
+    - kubectl --context {{ .CONTEXT }} delete --ignore-not-found crd alertmanagers.monitoring.coreos.com
+    - kubectl --context {{ .CONTEXT }} delete --ignore-not-found crd podmonitors.monitoring.coreos.com
+    - kubectl --context {{ .CONTEXT }} delete --ignore-not-found crd probes.monitoring.coreos.com
+    - kubectl --context {{ .CONTEXT }} delete --ignore-not-found crd prometheuses.monitoring.coreos.com
+    - kubectl --context {{ .CONTEXT }} delete --ignore-not-found crd prometheusrules.monitoring.coreos.com
+    - kubectl --context {{ .CONTEXT }} delete --ignore-not-found crd servicemonitors.monitoring.coreos.com
+    - kubectl --context {{ .CONTEXT }} delete --ignore-not-found crd thanosrulers.monitoring.coreos.com
+    - kubectl --context {{ .CONTEXT }} delete --ignore-not-found clusterrolebindings prometheus-grafana-clusterrolebinding
+    - kubectl --context {{ .CONTEXT }} delete --ignore-not-found clusterrolebindings prometheus-kube-prometheus-admission
+    - kubectl --context {{ .CONTEXT }} delete --ignore-not-found clusterrolebindings prometheus-kube-prometheus-operator
+    - kubectl --context {{ .CONTEXT }} delete --ignore-not-found clusterrolebindings prometheus-kube-prometheus-prometheus
+    - kubectl --context {{ .CONTEXT }} delete --ignore-not-found clusterrolebindings prometheus-kube-state-metrics
+    - kubectl --context {{ .CONTEXT }} delete --ignore-not-found clusterrole prometheus-grafana-clusterrole
+    - kubectl --context {{ .CONTEXT }} delete --ignore-not-found clusterrole prometheus-kube-prometheus-admission
+    - kubectl --context {{ .CONTEXT }} delete --ignore-not-found clusterrole prometheus-kube-prometheus-operator
+    - kubectl --context {{ .CONTEXT }} delete --ignore-not-found clusterrole prometheus-kube-prometheus-prometheus
+    - kubectl --context {{ .CONTEXT }} delete --ignore-not-found clusterrole prometheus-kube-state-metrics
+    - kubectl --context {{ .CONTEXT }} delete --ignore-not-found --namespace kube-system service prometheus-kube-prometheus-coredns
+    - kubectl --context {{ .CONTEXT }} delete --ignore-not-found --namespace kube-system service prometheus-kube-prometheus-kube-controller-manager
+    - kubectl --context {{ .CONTEXT }} delete --ignore-not-found --namespace kube-system service prometheus-kube-prometheus-kube-etcd
+    - kubectl --context {{ .CONTEXT }} delete --ignore-not-found --namespace kube-system service prometheus-kube-prometheus-kube-proxy
+    - kubectl --context {{ .CONTEXT }} delete --ignore-not-found --namespace kube-system service prometheus-kube-prometheus-kube-scheduler
+    - kubectl --context {{ .CONTEXT }} delete --ignore-not-found mutatingwebhookconfigurations prometheus-kube-prometheus-admission
+    - kubectl --context {{ .CONTEXT }} delete --ignore-not-found validatingwebhookconfigurations prometheus-kube-prometheus-admission
     - task: prom-config-delete
 
   port-forward:
