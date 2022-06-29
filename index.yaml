@@ -1,0 +1,15 @@
+apiVersion: v1
+entries:
+  opa-exporter:
+  - apiVersion: v2
+    appVersion: 0.1.1
+    created: "2022-06-29T18:40:39.370062638Z"
+    description: Prometheus exporter for OPA Gatekeeper.
+    digest: 1546749ec4e6b52c4a8f93a9385916aacf143327de820f78256b13425568bb1b
+    home: https://github.com/csullivanupgrade/opa-exporter
+    name: opa-exporter
+    type: application
+    urls:
+    - https://github.com/csullivanupgrade/opa-exporter/releases/download/opa-exporter-0.1.1/opa-exporter-0.1.1.tgz
+    version: 0.1.1
+generated: "2022-06-29T18:40:39.370079039Z"
