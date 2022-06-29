@@ -1,0 +1,19 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: curl-log
+  labels:
+    job: curl-log
+spec:
+  template:
+    metadata:
+      name: jobexample
+      labels:
+        job: curl-log
+    spec:
+      containers:
+      - name: curl
+        image: alpine/curl
+        command: ["curl", "http://opa-exporter:9141/metrics"]
+      restartPolicy: Never

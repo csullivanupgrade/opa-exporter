@@ -1,0 +1,17 @@
+version: '3'
+
+tasks:
+  namespace:
+    desc: Switch to a namespace in the local context ({{ .CONTEXT }}). Create it if necessary.
+    cmds:
+    - |
+      kubectl --context {{ .CONTEXT }} get namespaces {{ .NAMESPACE }} || \
+      kubectl --context {{ .CONTEXT }} create namespace {{ .NAMESPACE }}
+    - kubectx {{ .CONTEXT }}
+    - kubens {{ .NAMESPACE }}
+
+  helm-repo:
+    desc: Pull in a helm repo.
+    cmds:
+    - helm repo add {{ .NAME }} {{ .URL }}
+    - helm repo update {{ .NAME }}

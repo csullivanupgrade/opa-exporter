@@ -17,6 +17,7 @@ spec:
     spec:
       containers:
       - image: opa-scorecard:local
+        imagePullPolicy: Never
         name: opa-scorecard
         resources: {}
 status: {}
