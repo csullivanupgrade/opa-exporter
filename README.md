@@ -7,6 +7,11 @@ Inspired by this
 post](https://itnext.io/expose-open-policy-agent-gatekeeper-constraint-violations-with-prometheus-and-grafana-6b7ac92ea07f),
 from which the exporter code itself originates.
 
+## Why fork?
+
+The source was written as a proof of concept. My needs dictate a production-ready product with timely updates. This fork
+intends to be that.
+
 ## Contributing
 
 Pull requests are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) before beginning.
