@@ -2,6 +2,17 @@ apiVersion: v1
 entries:
   opa-exporter:
   - apiVersion: v2
+    appVersion: 0.2.0
+    created: "2022-06-30T20:16:38.144079502Z"
+    description: Helm chart for opa-exporter, a prometheus exporter for OPA Gatekeeper.
+    digest: bc5e9f0dc65d7fd321235ee74290dae7e5d03377cd72cb78d266ff1336ba58fa
+    home: https://github.com/csullivanupgrade/opa-exporter
+    name: opa-exporter
+    type: application
+    urls:
+    - https://github.com/csullivanupgrade/opa-exporter/releases/download/opa-exporter-0.1.2/opa-exporter-0.1.2.tgz
+    version: 0.1.2
+  - apiVersion: v2
     appVersion: 0.1.1
     created: "2022-06-29T18:40:39.370062638Z"
     description: Prometheus exporter for OPA Gatekeeper.
@@ -12,4 +23,4 @@ entries:
     urls:
     - https://github.com/csullivanupgrade/opa-exporter/releases/download/opa-exporter-0.1.1/opa-exporter-0.1.1.tgz
     version: 0.1.1
-generated: "2022-06-29T18:40:39.370079039Z"
+generated: "2022-06-30T20:16:38.144085902Z"
