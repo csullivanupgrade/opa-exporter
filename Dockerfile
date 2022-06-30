@@ -27,4 +27,4 @@ FROM gcr.io/distroless/static:nonroot
 
 COPY --from=build /build/tmp/opa-exporter /opa-exporter
 
-CMD [ "/opa-exporter", "--incluster=true" ]
+CMD [ "/opa-exporter" ]

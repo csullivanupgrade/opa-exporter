@@ -51,7 +51,7 @@ tasks:
   build-bin:
     desc: Build the binary.
     cmds:
-    - go build -o {{ .BIN_NAME }} main.go
+    - go build -o {{ .BIN_NAME }} cmd/main.go
     env:
       GOOS: "{{ OS }}"
       CGO_ENABLED: "0"
@@ -102,8 +102,9 @@ tasks:
     - docker build --tag {{ .IMAGE_NAME }}:{{ .IMAGE_TAG }} --progress plain .
     sources:
     - Dockerfile
-    - main.go
-    - pkg
+    - cmd/**/*
+    - internal/**/*
+    - pkg/**/*
     - go.mod
     - go.sum
 
@@ -116,18 +117,16 @@ tasks:
     - |
       helm template opa-exporter  \
         --values charts/opa-exporter/values.yaml \
-        --set image.tag=local \
+        --set image.tag={{ .IMAGE_TAG }} \
+        --set exporter.interval=10s \
         charts/opa-exporter \
       > {{ .TMP_DIR }}/opa-exporter.yaml
     - kubectl --context {{ .CONTEXT }} {{ .ACTION }} --wait --filename {{ .TMP_DIR }}/opa-exporter.yaml
-    sources:
-    - charts/opa-exporter
-    generates:
-    - "{{ .TMP_DIR }}/opa-exporter.yaml"
 
   deploy:
     desc: Deploy opa-exporter to your local cluster.
     cmds:
+    - task: build
     - task: kind:load
     - task: template
       vars:

@@ -1,3 +1,16 @@
+# -- opa-exporter configuration
+exporter:
+  # -- whether the exporter is running inside the cluster (i.e. use a service account)
+  inCluster: true
+  # -- constraints API scrape interval
+  interval: "60s"
+  # -- namespace the exporter is running in (does not affect operations - used for metrics FQDN)
+  namespace: default
+  # -- path for metrics server to listen
+  path: "metrics"
+  # -- port for the server to listen
+  port: "9141"
+
 # -- Count of Pod replicas
 replicaCount: 1
 
@@ -39,7 +52,7 @@ service:
   # -- Service type
   type: ClusterIP
   # -- Service port
-  port: 9141
+  port: "9141"
 
 serviceMonitor:
   # -- Wherter to install `ServiceMonitor` or not
