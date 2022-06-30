@@ -11,13 +11,13 @@ RUN echo "Building" && \
   echo
 
 ## TODO ## ADD TESTS ##
-# FROM compile AS test
+# FROM build AS test
 
 # RUN echo "Testing" && \
 #   task test && \
 #   echo
 
-FROM compile AS linter
+FROM build AS linter
 
 RUN echo "Linting" && \
   task lint && \
