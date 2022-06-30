@@ -24,6 +24,10 @@ spec:
           securityContext: {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default (printf "v%s" .Chart.AppVersion) }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - /opa-exporter
+            - --config
+            - /config.yaml
           ports:
             - containerPort: 9141
               name: http
@@ -37,6 +41,14 @@ spec:
               path: /
               port: http
           resources: {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: configuration-file
+              mountPath: /config.yaml
+              subPath: configuration-file
+      volumes:
+        - name: configuration-file
+          configMap:
+            name: {{ include "this.fullname" . }}
       {{- with .Values.nodeSelector }}
       nodeSelector: {{- toYaml . | nindent 8 }}
       {{- end }}

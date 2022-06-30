@@ -4,41 +4,68 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/csullivanupgrade/opa-exporter/internal/config"
+
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-var (
-	namespace = "opa_exporter"
+type Exporter struct {
+	ConstraintInformation *prometheus.Desc
+	ConstraintViolation   *prometheus.Desc
+	Metrics               []prometheus.Metric
+	Namespace             string
+	Up                    *prometheus.Desc
+}
 
-	Up = prometheus.NewDesc(
-		prometheus.BuildFQName(namespace, "", "up"),
-		"Was the last OPA exporter query successful.",
-		nil,
-		nil,
-	)
-	ConstraintViolation = prometheus.NewDesc(
-		prometheus.BuildFQName(namespace, "", "constraint_violations"),
-		"OPA violations for all constraints",
-		[]string{
-			"kind",
-			"name",
-			"violating_kind",
-			"violating_name",
-			"violating_namespace",
-			"violation_msg",
-			"violation_enforcement",
-		},
-		nil,
-	)
-	ConstraintInformation = prometheus.NewDesc(
-		prometheus.BuildFQName(namespace, "", "constraint_information"),
-		"Some general information of all constraints",
-		[]string{"kind", "name", "enforcementAction", "totalViolations"},
-		nil,
-	)
-)
+func NewExporter(cfg config.Config) *Exporter {
+	return &Exporter{
+		Namespace: cfg.Namespace,
+		Metrics:   []prometheus.Metric{},
+		ConstraintInformation: prometheus.NewDesc(
+			prometheus.BuildFQName(cfg.Namespace, "", "constraint_information"),
+			"Some general information of all constraints",
+			[]string{"kind", "name", "enforcementAction", "totalViolations"},
+			nil,
+		),
+		ConstraintViolation: prometheus.NewDesc(
+			prometheus.BuildFQName(cfg.Namespace, "", "constraint_violations"),
+			"OPA violations for all constraints",
+			[]string{
+				"kind",
+				"name",
+				"violating_kind",
+				"violating_name",
+				"violating_namespace",
+				"violation_msg",
+				"violation_enforcement",
+			},
+			nil,
+		),
+		Up: prometheus.NewDesc(
+			prometheus.BuildFQName(cfg.Namespace, "", "up"),
+			"Was the last OPA exporter query successful.",
+			nil,
+			nil,
+		),
+	}
+}
 
-func ExportViolations(constraints []Constraint) []prometheus.Metric {
+func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
+	ch <- e.ConstraintInformation
+	ch <- e.ConstraintViolation
+	ch <- e.Up
+}
+
+func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
+	ch <- prometheus.MustNewConstMetric(
+		e.Up, prometheus.GaugeValue, 1,
+	)
+	for _, m := range e.Metrics {
+		ch <- m
+	}
+}
+
+func ExportViolations(cv *prometheus.Desc, constraints []Constraint) []prometheus.Metric {
 	unique := make(map[string]bool)
 	m := make([]prometheus.Metric, 0)
 	for _, c := range constraints {
@@ -50,7 +77,7 @@ func ExportViolations(constraints []Constraint) []prometheus.Metric {
 			}
 			unique[key] = true
 			metric := prometheus.MustNewConstMetric(
-				ConstraintViolation,
+				cv,
 				prometheus.GaugeValue,
 				1,
 				c.Meta.Kind,
@@ -67,11 +94,11 @@ func ExportViolations(constraints []Constraint) []prometheus.Metric {
 	return m
 }
 
-func ExportConstraintInformation(constraints []Constraint) []prometheus.Metric {
+func ExportConstraintInformation(ci *prometheus.Desc, constraints []Constraint) []prometheus.Metric {
 	m := make([]prometheus.Metric, 0)
 	for _, c := range constraints {
 		metric := prometheus.MustNewConstMetric(
-			ConstraintInformation,
+			ci,
 			prometheus.GaugeValue,
 			c.Status.TotalViolations,
 			c.Meta.Kind,
