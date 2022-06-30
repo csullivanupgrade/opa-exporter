@@ -1,3 +1,4 @@
+// Package config handles getting configuration from the environment and/or from file
 package config
 
 import (

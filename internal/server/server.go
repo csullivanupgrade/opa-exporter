@@ -1,3 +1,4 @@
+// Package server handles HTTP requests for the exporter
 package server
 
 import (
