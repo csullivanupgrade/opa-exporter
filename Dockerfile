@@ -1,3 +1,5 @@
+# syntax = docker/dockerfile:1-experimental
+
 FROM golang:1.18.3 AS build
 
 ENV TASK_VER 3.13.0
@@ -11,12 +13,16 @@ RUN echo "Fetching dev dependencies" && \
 
 COPY . .
 
-RUN  --mount=type=cache,target=/root/.cache/go-build \
+RUN \
+  --mount=type=cache,target=/root/.cache/go-build \
   echo "Building" && \
   task build-bin && \
   echo
 
-RUN echo "Linting" && \
+RUN \
+  --mount=type=cache,target=/root/.cache/go-build \
+  --mount=type=cache,target=/root/.cache/golangci-lint \
+  echo "Linting" && \
   task lint && \
   echo
 
