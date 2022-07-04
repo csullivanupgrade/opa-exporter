@@ -4,11 +4,14 @@ package opa
 import (
 	"context"
 	"encoding/json"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/csullivanupgrade/opa-exporter/internal/log"
+
+	"go.uber.org/zap"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes"
@@ -54,12 +57,10 @@ const (
 
 func createConfig(inCluster *bool) (*rest.Config, error) {
 	if *inCluster {
-		log.Println("Using incluster K8S client")
 		return rest.InClusterConfig()
 	} else {
 		home, err := os.UserHomeDir()
 		if err != nil {
-			log.Println("Could not find user HomeDir" + err.Error())
 			return nil, err
 		}
 
@@ -68,7 +69,6 @@ func createConfig(inCluster *bool) (*rest.Config, error) {
 		// use the current context in kubeconfig
 		config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 		if err != nil {
-			log.Println(err)
 			return nil, err
 		}
 		return config, nil
@@ -78,7 +78,6 @@ func createConfig(inCluster *bool) (*rest.Config, error) {
 func createKubeClient(inCluster *bool) (*kubernetes.Clientset, error) {
 	config, err := createConfig(inCluster)
 	if err != nil {
-		log.Println(err)
 		return nil, err
 	}
 
@@ -86,7 +85,6 @@ func createKubeClient(inCluster *bool) (*kubernetes.Clientset, error) {
 	clientset, err := kubernetes.NewForConfig(config)
 
 	if err != nil {
-		log.Println(err)
 		return nil, err
 	}
 	return clientset, nil
@@ -95,42 +93,24 @@ func createKubeClient(inCluster *bool) (*kubernetes.Clientset, error) {
 func createKubeClientGroupVersion(inCluster *bool) (controllerClient.Client, error) {
 	config, err := createConfig(inCluster)
 	if err != nil {
-		log.Println(err)
 		return nil, err
 	}
 
 	client, err := controllerClient.New(config, controllerClient.Options{})
 	if err != nil {
-		log.Println(err)
 		return nil, err
 	}
 	return client, nil
 }
 
-func marshalAndLog(o interface{}) {
-	b, err := json.MarshalIndent(o, "", "\t")
-	if err != nil {
-		log.Printf("Error marshalling: %+v\n", err)
-	} else {
-		log.Println(string(b))
-	}
-}
-
-func checkAndAddConstraint(item unstructured.Unstructured) (*Constraint, error) {
-	kind := item.GetKind()
-	name := item.GetName()
-	namespace := item.GetNamespace()
-	log.Printf("Kind:%s, Name:%s, Namespace:%s \n", kind, name, namespace)
-	var obj = item.Object
+func checkAndAddConstraint(obj map[string]interface{}, kind string, name string) (*Constraint, error) {
 	var constraint Constraint
 	data, err := json.Marshal(obj)
 	if err != nil {
-		log.Println(err)
 		return nil, err
 	}
 	err = json.Unmarshal(data, &constraint)
 	if err != nil {
-		log.Println(err)
 		return nil, err
 	}
 
@@ -144,74 +124,89 @@ func checkAndAddConstraint(item unstructured.Unstructured) (*Constraint, error) 
 	}, nil
 }
 
-// GetConstraints returns a list of all OPA constraints
-// nolint:gocognit,gocyclo // would be nice to reduce complexity - I don't see a straightforward path ATM.
-func GetConstraints(inCluster *bool) ([]Constraint, error) {
-	client, err := createKubeClient(inCluster)
-	if err != nil {
-		return nil, err
-	}
-	marshalAndLog(client)
-
+func getConstraints(group string, kind string, inCluster *bool) ([]unstructured.Unstructured, error) {
 	cClient, err := createKubeClientGroupVersion(inCluster)
 	if err != nil {
 		return nil, err
 	}
-	marshalAndLog(cClient)
 
-	_, c, err := client.ServerGroupsAndResources()
+	actual := &unstructured.UnstructuredList{}
+	actual.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   group,
+		Kind:    kind,
+		Version: constraintsGV,
+	})
+
+	if err = cClient.List(context.Background(), actual); err != nil {
+		return nil, err
+	}
+
+	return actual.Items, nil
+}
+
+func getAPIResources(inCluster *bool) (*v1.APIResourceList, error) {
+	client, err := createKubeClient(inCluster)
+	if err != nil {
+		return nil, err
+	}
+
+	apiResources, err := client.ServerResourcesForGroupVersion(constraintsGV)
+	if err != nil {
+		return nil, err
+	}
+
+	return apiResources, nil
+}
+
+// GetConstraints returns a list of all OPA constraints
+// nolint:gocognit // would be nice to reduce complexity - I don't see a straightforward path ATM.
+func GetConstraints(ctx context.Context, inCluster *bool) ([]Constraint, error) {
+	logger := log.FromContext(ctx)
+
+	apiResources, err := getAPIResources(inCluster)
 	if err != nil {
 		return nil, err
 	}
 
 	var constraints []Constraint
-	for _, apiresources := range c {
-		if apiresources.GroupVersion != constraintsGV {
-			log.Println("Skipping group ", apiresources.GroupVersion)
+	for _, r := range apiResources.APIResources {
+		if strings.HasSuffix(r.Name, "/status") {
 			continue
 		}
-		for _, r := range apiresources.APIResources {
-			if strings.HasSuffix(r.Name, "/status") {
-				continue
-			}
 
-			for _, verb := range r.Verbs {
-				if verb == "list" {
-					break
-				} else {
-					log.Printf("Can't list objets of type %+v\n", r.Name)
-					for _, verb := range r.Verbs {
-						log.Println("Allowed: ", verb)
-					}
+		items, err := getConstraints(r.Group, r.Kind, inCluster)
+		if err != nil {
+			logger.Error("error listing", zap.Error(err))
+			continue
+		}
+
+		if len(items) > 0 {
+			for _, item := range items {
+				kind := item.GetKind()
+				name := item.GetName()
+				namespace := item.GetNamespace()
+				constraint, err := checkAndAddConstraint(item.Object, kind, name)
+				if err != nil {
+					logger.Error(
+						"error when checking constraint",
+						zap.Error(err), zap.String("kind", kind),
+						zap.String("name", name),
+						zap.String("namespace", namespace),
+					)
 					continue
 				}
+				logger.Info(
+					"added constraint",
+					zap.Error(err), zap.String("kind", kind),
+					zap.String("name", name),
+					zap.String("namespace", namespace),
+				)
+				constraints = append(constraints, *constraint)
 			}
-
-			actual := &unstructured.UnstructuredList{}
-			actual.SetGroupVersionKind(schema.GroupVersionKind{
-				Group:   r.Group,
-				Kind:    r.Kind,
-				Version: constraintsGV,
-			})
-
-			err = cClient.List(context.Background(), actual)
-			if err != nil {
-				log.Printf("Error listing: %+v\n", err)
-				continue
-			}
-
-			if len(actual.Items) > 0 {
-				for _, item := range actual.Items {
-					constraint, err := checkAndAddConstraint(item)
-					if err != nil {
-						continue
-					}
-					constraints = append(constraints, *constraint)
-				}
-			} else {
-				log.Println("Nothing returned for Kind ", r.Kind)
-			}
+		} else {
+			logger.Info("nothing returned for this kind", zap.String("kind", r.Kind))
 		}
 	}
+
 	return constraints, nil
 }

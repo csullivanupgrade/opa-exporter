@@ -8,6 +8,8 @@ data:
   configuration-file: |
     inCluster: {{ .Values.exporter.inCluster }}
     interval: {{ .Values.exporter.interval }}
+    logMode: {{ .Values.exporter.logMode }}
+    logLevel: {{ .Values.exporter.logLevel }}
     namespace: {{ .Values.exporter.namespace }}
     path: {{ .Values.exporter.path }}
     port: {{ .Values.exporter.port }}

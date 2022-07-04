@@ -1,10 +1,12 @@
 package opa
 
 import (
+	"context"
 	"fmt"
-	"log"
 
 	"github.com/csullivanupgrade/opa-exporter/internal/config"
+	"github.com/csullivanupgrade/opa-exporter/internal/log"
+	"go.uber.org/zap"
 
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -65,14 +67,16 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	}
 }
 
-func ExportViolations(cv *prometheus.Desc, constraints []Constraint) []prometheus.Metric {
+func ExportViolations(ctx context.Context, cv *prometheus.Desc, constraints []Constraint) []prometheus.Metric {
+	logger := log.FromContext(ctx)
+
 	unique := make(map[string]bool)
 	m := make([]prometheus.Metric, 0)
 	for _, c := range constraints {
 		for _, v := range c.Status.Violations {
 			key := fmt.Sprintf("%v-%v-%v-%v-%v", c.Meta.Kind, c.Meta.Name, v.Name, v.Namespace, v.Message)
 			if _, ok := unique[key]; ok {
-				log.Printf("Found duplicate metrics: %v\n", key)
+				logger.Warn("found duplicate metric", zap.String("metric", key))
 				continue
 			}
 			unique[key] = true

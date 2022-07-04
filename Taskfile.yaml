@@ -57,21 +57,23 @@ tasks:
       CGO_ENABLED: "0"
       GOARCH: "{{ ARCH }}"
     sources:
-    - main.go
-    - pkg
+    - cmd/**/*
+    - internal/**/*
+    - pkg/**/*
     - go.mod
     - go.sum
     generates:
     - "{{ .BIN_NAME }}"
 
+  # TODO: Unit tests
   # test:
   #   desc: Run tests.
   #   cmds:
-  #   # TODO: Unit tests
-  #   # - go test ./... -v -short {{ .CLI_ARGS }}
+  #   - go test ./... -v -short {{ .CLI_ARGS }}
   #   sources:
-  #   - main.go
-  #   - pkg
+  #   - cmd/**/*
+  #   - internal/**/*
+  #   - pkg/**/*
   #   - go.mod
   #   - go.sum
 
@@ -82,9 +84,11 @@ tasks:
     vars:
       TIMEOUT: 1m
     sources:
-    - main.go
-    - pkg
-    - .golangci.yaml
+    - cmd/**/*
+    - internal/**/*
+    - pkg/**/*
+    - go.mod
+    - go.sum
 
   tidy:
     desc: Tidy up go deps.
@@ -99,14 +103,7 @@ tasks:
   build:
     desc: Build the docker image and generate a unique tag to force redeployment.
     cmds:
-    - docker build --tag {{ .IMAGE_NAME }}:{{ .IMAGE_TAG }} --progress plain .
-    sources:
-    - Dockerfile
-    - cmd/**/*
-    - internal/**/*
-    - pkg/**/*
-    - go.mod
-    - go.sum
+    - DOCKER_BUILDKIT=1 docker build --tag {{ .IMAGE_NAME }}:{{ .IMAGE_TAG }} .
 
   template:
     desc: Provide the opa-exporter template and invoke it with a variable kubectl command.
@@ -119,6 +116,8 @@ tasks:
         --values charts/opa-exporter/values.yaml \
         --set image.tag={{ .IMAGE_TAG }} \
         --set exporter.interval=10s \
+        --set exporter.logLevel=debug \
+        --set exporter.logMode=development \
         charts/opa-exporter \
       > {{ .TMP_DIR }}/opa-exporter.yaml
     - kubectl --context {{ .CONTEXT }} {{ .ACTION }} --wait --filename {{ .TMP_DIR }}/opa-exporter.yaml

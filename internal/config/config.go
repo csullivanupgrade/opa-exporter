@@ -15,6 +15,8 @@ const (
 	path      = "METRICS_PATH"
 	inCluster = "INCLUSTER"
 	interval  = "INTERVAL"
+	logLevel  = "LOG_LEVEL"
+	logMode   = "LOG_MODE"
 	namespace = "NAMESPACE"
 )
 
@@ -23,6 +25,8 @@ type Config struct {
 	Path      string        `mapstructure:"path"`
 	InCluster bool          `mapstructure:"inCluster"`
 	Interval  time.Duration `mapstructure:"interval"`
+	LogLevel  string        `mapstructure:"logLevel"`
+	LogMode   string        `mapstructure:"logMode"`
 	Namespace string        `mapstructure:"namespace"`
 }
 
@@ -31,12 +35,13 @@ func New(configFile string) *Config {
 	viper.SetConfigFile(configFile)
 	viper.SetEnvPrefix("OPA_EXPORTER")
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_", "-", "_"))
-	// viper.AutomaticEnv()
 
 	viper.SetDefault(port, "9141")
 	viper.SetDefault(path, "metrics")
 	viper.SetDefault(inCluster, true)
 	viper.SetDefault(interval, "60s")
+	viper.SetDefault(logLevel, "info")
+	viper.SetDefault(logMode, "production")
 	viper.SetDefault(namespace, "default")
 
 	c := &Config{
@@ -63,6 +68,8 @@ func New(configFile string) *Config {
 	fmt.Println("-- path:\t", c.Path)
 	fmt.Println("-- incluster:\t", c.InCluster)
 	fmt.Println("-- interval:\t", c.Interval)
+	fmt.Println("-- logLevel:\t", c.LogLevel)
+	fmt.Println("-- logMode:\t", c.LogMode)
 	fmt.Println("-- namepsace:\t", c.Namespace)
 
 	return c

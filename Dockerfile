@@ -11,7 +11,8 @@ RUN echo "Fetching dev dependencies" && \
 
 COPY . .
 
-RUN echo "Building" && \
+RUN  --mount=type=cache,target=/root/.cache/go-build \
+  echo "Building" && \
   task build-bin && \
   echo
 
