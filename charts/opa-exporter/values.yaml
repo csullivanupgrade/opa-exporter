@@ -6,6 +6,12 @@ exporter:
   interval: "60s"
   # -- namespace the exporter is running in (does not affect operations - used for metrics FQDN)
   namespace: default
+  # -- log level to use, uses Zap levels
+  logLevel: info
+  # -- log mode to use:
+  # ---- `development` adds extra stacktrace/codepath fields
+  # ---- `nop` disables the logger
+  logMode: production
   # -- path for metrics server to listen
   path: "metrics"
   # -- port for the server to listen

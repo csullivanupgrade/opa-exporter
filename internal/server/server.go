@@ -2,20 +2,24 @@
 package server
 
 import (
+	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
 	"github.com/csullivanupgrade/opa-exporter/internal/config"
+	"github.com/csullivanupgrade/opa-exporter/internal/log"
 	"github.com/csullivanupgrade/opa-exporter/pkg/opa"
+	"go.uber.org/zap"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-func startScheduled(e *opa.Exporter, cfg config.Config) {
+func startScheduled(ctx context.Context, e *opa.Exporter, cfg config.Config) {
+	logger := log.FromContext(ctx)
+
 	done := make(chan bool)
 	ticker := time.NewTicker(cfg.Interval)
 	go func() {
@@ -24,14 +28,14 @@ func startScheduled(e *opa.Exporter, cfg config.Config) {
 			case <-done:
 				return
 			case t := <-ticker.C:
-				log.Println("Tick at", t)
-				constraints, err := opa.GetConstraints(&cfg.InCluster)
+				logger.Info("ticker", zap.Time("tick", t))
+				constraints, err := opa.GetConstraints(ctx, &cfg.InCluster)
 				if err != nil {
-					log.Printf("%+v\n", err)
+					logger.Error("could not get contraints", zap.Error(err))
 				}
-				log.Printf("Found %v constraints", len(constraints))
+				logger.Info("found constraints", zap.Int("no_constraints", len(constraints)))
 				allMetrics := make([]prometheus.Metric, 0)
-				violationMetrics := opa.ExportViolations(e.ConstraintViolation, constraints)
+				violationMetrics := opa.ExportViolations(ctx, e.ConstraintViolation, constraints)
 				allMetrics = append(allMetrics, violationMetrics...)
 
 				constraintInformationMetrics := opa.ExportConstraintInformation(e.ConstraintInformation, constraints)
@@ -43,9 +47,11 @@ func startScheduled(e *opa.Exporter, cfg config.Config) {
 	}()
 }
 
-func Run(cfg config.Config) {
+func Run(ctx context.Context, cfg config.Config) {
+	logger := log.FromContext(ctx)
+
 	exporter := opa.NewExporter(cfg)
-	startScheduled(exporter, cfg)
+	startScheduled(ctx, exporter, cfg)
 	prometheus.Unregister(collectors.NewGoCollector())
 	prometheus.MustRegister(exporter)
 
@@ -60,9 +66,11 @@ func Run(cfg config.Config) {
              </body>
              </html>`))
 		if err != nil {
-			log.Printf("err handling response: %v", err)
+			logger.Error("error handling reseponse", zap.Error(err))
 		}
 	})
 	bind := fmt.Sprintf(":%s", cfg.Port)
-	log.Fatal(http.ListenAndServe(bind, nil))
+	if err := http.ListenAndServe(bind, nil); err != nil {
+		logger.Fatal("server error", zap.Error(err))
+	}
 }
