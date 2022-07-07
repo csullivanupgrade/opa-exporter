@@ -23,7 +23,7 @@ RUN \
   --mount=type=cache,target=/root/.cache/go-build \
   --mount=type=cache,target=/root/.cache/golangci-lint \
   echo "Linting" && \
-  task lint && \
+  task lint TIMEOUT=60s && \
   echo
 
 FROM gcr.io/distroless/static:nonroot
