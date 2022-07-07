@@ -82,7 +82,7 @@ tasks:
     cmds:
     - GOGC=100 golangci-lint run ./... --timeout {{ .TIMEOUT }} {{ .CLI_ARGS }}
     vars:
-      TIMEOUT: 1m
+      TIMEOUT: 2m
     sources:
     - cmd/**/*
     - internal/**/*
