@@ -118,6 +118,7 @@ tasks:
         --set exporter.interval=10s \
         --set exporter.logLevel=debug \
         --set exporter.logMode=development \
+        --set namespace={{ .NAMESPACE }} \
         charts/opa-exporter \
       > {{ .TMP_DIR }}/opa-exporter.yaml
     - kubectl --context {{ .CONTEXT }} {{ .ACTION }} --wait --filename {{ .TMP_DIR }}/opa-exporter.yaml

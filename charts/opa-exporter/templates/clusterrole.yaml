@@ -3,6 +3,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: {{ template "this.fullname" . }}
+  namespace: {{ .Values.namespace }}
   labels: {{- include "this.labels" . | nindent 4 }}
 rules:
   - apiGroups:
