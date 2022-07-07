@@ -26,6 +26,8 @@ image:
   tag: ""
   # -- List of image pull secrets
   pullSecrets: []
+  # -- imagePullPolicy, default value will not add the field
+  pullPolicy: ""
 
 # -- namespace the exporter should run in
 namespace: opa-exporter

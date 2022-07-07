@@ -2,6 +2,6 @@ apiVersion: v2
 name: opa-exporter
 description: Helm chart for opa-exporter, a prometheus exporter for OPA Gatekeeper.
 type: application
-version: 0.2.1
+version: 0.2.2
 appVersion: 0.3.0
 home: https://github.com/csullivanupgrade/opa-exporter

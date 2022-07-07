@@ -24,7 +24,9 @@ spec:
         - name: {{ .Chart.Name }}
           securityContext: {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default (printf "v%s" .Chart.AppVersion) }}"
+          {{- if ne .Values.image.pullPolicy "" }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- end }}
           args:
             - /opa-exporter
             - --config
