@@ -8,6 +8,8 @@ on:
     - 'main'
     tags:
     - "v*.*.*"
+  schedule:
+    - cron: '0 8 * * *'
 
 env:
   IMAGE_NAME: opa-exporter
@@ -77,3 +79,15 @@ jobs:
         push: ${{ startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main' }}
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
+
+  sonarcloud:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: SonarCloud Scan
+      uses: sonarsource/sonarcloud-github-action@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
