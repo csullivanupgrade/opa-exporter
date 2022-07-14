@@ -1,6 +1,6 @@
 # syntax = docker/dockerfile:1-experimental
 
-FROM golang:1.18.3 AS build
+FROM golang:1.18.4 AS build
 
 ENV TASK_VER 3.13.0
 ENV GOLANGCI_LINT_VER 1.46.2
