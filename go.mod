@@ -6,7 +6,7 @@ require (
 	github.com/prometheus/client_golang v1.12.2
 	github.com/spf13/viper v1.12.0
 	go.uber.org/zap v1.21.0
-	k8s.io/apimachinery v0.24.3
+	k8s.io/apimachinery v0.24.4
 	k8s.io/client-go v0.24.3
 	sigs.k8s.io/controller-runtime v0.12.3
 )
