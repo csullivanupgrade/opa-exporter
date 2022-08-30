@@ -70,7 +70,13 @@ func Run(ctx context.Context, cfg config.Config) {
 		}
 	})
 	bind := fmt.Sprintf(":%s", cfg.Port)
-	if err := http.ListenAndServe(bind, nil); err != nil {
+	srv := &http.Server{
+		Addr:         bind,
+		ReadTimeout:  cfg.ReadTimeout * time.Second,
+		WriteTimeout: cfg.WriteTimeout * time.Second,
+	}
+
+	if err := srv.ListenAndServe(); err != nil {
 		logger.Fatal("server error", zap.Error(err))
 	}
 }
