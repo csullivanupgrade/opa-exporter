@@ -3,7 +3,7 @@ module github.com/csullivanupgrade/opa-exporter
 go 1.19
 
 require (
-	github.com/prometheus/client_golang v1.13.0
+	github.com/prometheus/client_golang v1.13.1
 	github.com/spf13/viper v1.13.0
 	go.uber.org/zap v1.23.0
 	k8s.io/apimachinery v0.25.2
